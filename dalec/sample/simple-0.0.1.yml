@@ -1,0 +1,66 @@
+# syntax=ghcr.io/azure/dalec/frontend:0.18
+
+args:
+    VERSION: 0.0.1
+    REVISION: 1
+    TARGETOS:
+    TARGETARCH:
+name: simple 
+packager: hebeberm
+vendor: Microsoft Corporation
+license: MIT
+description: simple test sysext for learning and prototyping
+x-build-extensions:
+    build-targets:
+        - azlinux3/testing/sysext
+version: ${VERSION}
+revision: ${REVISION}
+sources:
+conflicts:
+x-linux-artifacts: &linux-artifacts
+    binaries:
+        _output/bin/hello: {}
+    createDirectories:
+        state:
+            hello: {}
+x-azl-dependencies:
+    build: &hello-azl-build-deps
+        sed: {}
+targets:
+    azlinux3:
+        artifacts: *linux-artifacts
+        dependencies:
+            build: *hello-azl-build-deps
+            extra_repos:
+                - config:
+                    azl-cloud-native.repo:
+                        inline:
+                            file:
+                                contents: "[azlinux-extended]\nname=Azure Linux Cloud Native $releasever $basearch\nbaseurl=https://packages.microsoft.com/azurelinux/$releasever/prod/extended/$basearch\ngpgkey=file:///etc/pki/rpm-gpg/MICROSOFT-RPM-GPG-KEY\ngpgcheck=1\nrepo_gpgcheck=1\nenabled=1\nskip_if_unavailable=True\nsslverify=1\n"
+                  envs:
+                    - install
+build:
+    env:
+        VERSION: "${VERSION}"
+        REVISION: "${REVISION}"
+        TARGET_OS: ${TARGETOS}
+        TARGET_ARCH: ${TARGETARCH}
+    steps:
+        - command: |
+            mkdir -p _output/bin/
+            echo "echo Hello World!" > _output/bin/hello
+            chmod 755 _output/bin/hello
+artifacts:
+    binaries:
+      _output/bin/hello: {}
+tests:
+    - name: Check files
+      files:
+        /usr/bin/hello:
+            permissions: 0755
+
+changelog:
+  - date: "2025-11-11"
+    author: "Henry Beberman <henry.beberman@microsoft.com>"
+    changes:
+      - Initial version
